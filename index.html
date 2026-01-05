@@ -1,1 +1,1120 @@
-<!DOCTYPE html>                                                                                                         
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planification Pharmacie - 165.A0</title>
+    <!-- Bibliothèques pour export Word EC_Carl-->
+    <script src="https://unpkg.com/html-docx-js/dist/html-docx.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+    <style>
+        :root {
+            --col-primary: #3D5E6B;    /* Bleu pétrole */
+            --col-secondary: #9CA5B1;  /* Gris bleu */
+            --col-accent: #839AD1;     /* Bleu pervenche */
+            --col-alert: #F0AF35;      /* Jaune moutarde */
+            --col-text: #44474D;       /* Gris anthracite */
+            --bg-light: #f4f6f8;
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: var(--col-text); background-color: #eef1f5; margin: 0; padding: 20px; font-size: 13px; }
+        .container { max-width: 1650px; margin: 0 auto; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.1); padding: 40px; min-height: 100vh; }
+       
+        <!-- Test Eric-->
+
+        /* EN-TÊTE */
+        header { border-bottom: 5px solid var(--col-primary); margin-bottom: 20px; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: flex-start; }
+        h1 { color: var(--col-primary); margin: 0; text-transform: uppercase; font-size: 24px; letter-spacing: 1px; }
+        h2 { color: var(--col-secondary); font-size: 16px; margin-top: 5px; font-weight: 600; margin-bottom: 0; }
+        .date-display { color: #444; font-size: 14px; margin-top: 8px; font-weight: bold; font-style: italic; }
+
+        /* INSTRUCTIONS */
+        .instructions-box { background-color: #fff9e6; border-left: 5px solid var(--col-alert); padding: 20px; margin-bottom: 30px; border-radius: 4px; display: flex; gap: 20px; align-items: flex-start; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .instructions-icon { font-size: 30px; margin-top: 5px; }
+        .instructions-content ul { margin: 5px 0 0 0; padding-left: 20px; }
+        .instructions-content li { margin-bottom: 5px; line-height: 1.4; }
+        
+        /* Bouton Ressource FAD dans les instructions */
+        .btn-fad-resource {
+            background-color: var(--col-primary);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: background 0.2s;
+            vertical-align: middle;
+        }
+        .btn-fad-resource:hover { background-color: #2a4049; }
+
+        /* BARRE DE CONTRÔLE */
+        .control-bar { position: sticky; top: 0; background: rgba(255,255,255,0.98); padding: 15px 0; border-bottom: 1px solid #ddd; display: flex; gap: 15px; z-index: 100; margin-bottom: 20px; backdrop-filter: blur(5px); }
+        .btn { border: none; padding: 10px 20px; border-radius: 4px; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .btn-save { background-color: var(--col-primary); color: white; }
+        .btn-load { background-color: var(--col-secondary); color: white; }
+        .btn-word { background-color: #2b5797; color: white; }
+        .btn-print { background-color: var(--col-text); color: white; margin-left: auto; }
+        .btn-add { background-color: #f0f0f0; color: var(--col-primary); border: 1px solid #ccc; width: 100%; display: block; padding: 8px; margin-top: 5px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-add:hover { background-color: #e0e0e0; }
+        #fileInput { display: none; }
+
+        /* BOUTONS +/- (SPINNER) */
+        .spinner-group { display: flex; align-items: center; width: 100%; }
+        .spinner-btn { width: 25px; height: 30px; background: #e0e0e0; border: 1px solid #ccc; cursor: pointer; font-weight: bold; color: #555; display: flex; align-items: center; justify-content: center; user-select: none; }
+        .spinner-btn:hover { background: #d0d0d0; }
+        .spinner-btn.minus { border-radius: 4px 0 0 4px; border-right: none; }
+        .spinner-btn.plus { border-radius: 0 4px 4px 0; border-left: none; }
+        .spinner-input { width: 50px !important; text-align: center; border-radius: 0 !important; margin: 0; height: 30px; font-weight: bold; }
+
+        /* GRILLES ET INPUTS */
+        .info-grid { display: grid; grid-template-columns: 40% 60%; gap: 25px; margin-bottom: 30px; background-color: #fafafa; padding: 25px; border-radius: 8px; border: 1px solid #eee; }
+        .info-col-left, .info-col-right { display: flex; flex-direction: column; gap: 15px; }
+        .input-group { margin-bottom: 0; }
+        label { display: block; font-weight: 800; color: var(--col-primary); margin-bottom: 5px; font-size: 11px; text-transform: uppercase; }
+        input[type="text"], textarea, select, input[type="number"], input[type="date"] { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; background-color: #fff; font-family: 'Segoe UI', sans-serif; font-size: 12px; box-sizing: border-box; resize: vertical; }
+        select { font-weight: bold; color: #333; background-color: #fcfcfc; }
+        #competencyArea { white-space: pre-wrap; font-family: 'Segoe UI', monospace; font-size: 12px; line-height: 1.5; color: #222; }
+        
+        /* Placeholder styling for better visibility if needed */
+        ::placeholder { color: #aab; font-style: italic; opacity: 0.8; }
+
+        /* SEMAINES */
+        .week-wrapper { border: 2px solid #ccc; margin-bottom: 30px; break-inside: avoid; background: #fff; box-shadow: 0 4px 8px rgba(0,0,0,0.05); border-radius: 4px; overflow: hidden; }
+        .week-global-header { background-color: var(--col-primary); color: white; padding: 10px 15px; display: flex; align-items: center; gap: 15px; }
+        .week-label { font-size: 18px; font-weight: 800; letter-spacing: 1px; white-space: nowrap; margin-right: 15px; }
+        .week-global-input { background: rgba(255,255,255,0.15) !important; border: 1px solid rgba(255,255,255,0.3) !important; color: white !important; font-weight: bold; font-size: 16px !important; flex-grow: 1; }
+        .week-global-input::placeholder { color: rgba(255,255,255,0.6); }
+
+        /* SÉQUENCES */
+        .session-row { padding: 10px; border-bottom: 3px solid #e0e0e0; }
+        .session-header-line { display: flex; align-items: center; gap: 15px; margin-bottom: 10px; background: #f8f9fa; padding: 8px; border-radius: 4px; border: 1px solid #eee; }
+        .session-badge { background-color: var(--col-secondary); color: white; font-weight: bold; padding: 4px 12px; border-radius: 15px; font-size: 12px; white-space: nowrap; }
+        .grid-columns { display: grid; grid-template-columns: 8% 19% 19% 19% 17% 18%; gap: 8px; }
+        .col { padding: 5px; border-right: 1px dashed #eee; }
+        .col-header { font-size: 10px; text-transform: uppercase; color: var(--col-text); font-weight: 700; margin-bottom: 5px; border-bottom: 1px solid #eee; text-align: center; }
+        .col:not(:first-child) .col-header { text-align: left; }
+        
+        .checkbox-wrapper { display: flex; align-items: center; font-size: 11px; margin-bottom: 2px; }
+        .checkbox-wrapper input { margin-right: 6px; flex-shrink: 0; }
+        .mode-selector { display: flex; gap: 2px; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px dotted #ddd; }
+        .tag-radio { display: none; }
+        .tag-label { flex: 1; text-align: center; padding: 2px 0; border-radius: 3px; font-size: 9px; font-weight: bold; border: 1px solid #ccc; cursor: pointer; color: #888; }
+        .tag-radio:checked + .tag-label.sync { background-color: var(--col-accent); color: white; }
+        .tag-radio:checked + .tag-label.async { background-color: var(--col-alert); color: white; }
+
+        /* ÉVALUATIONS */
+        .eval-block { border: 1px solid #ccc; margin-bottom: 20px; break-inside: avoid; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .eval-header { background-color: var(--col-text); color: white; padding: 10px 15px; display: flex; align-items: center; gap: 10px; }
+        .eval-num { font-weight: 800; font-size: 16px; white-space: nowrap; color: white; }
+        .eval-title-input { background: rgba(255,255,255,0.1) !important; color: white !important; font-weight: bold; font-size: 14px !important; border: 1px solid rgba(255,255,255,0.3) !important; flex-grow: 1; }
+        .eval-title-input::placeholder { color: rgba(255,255,255,0.6); }
+
+        /* Bouton Aide FAD */
+        .btn-help-fad { background: var(--col-alert); color: #222; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; text-decoration: none; border: 1px solid #d99a22; white-space: nowrap; display: inline-flex; align-items: center; gap: 5px; margin-left: 5px; transition: 0.2s; }
+        .btn-help-fad:hover { background: #ffbe4f; transform: translateY(-1px); }
+
+        /* Bar de choix en haut (Menus déroulants) */
+        .eval-top-bar { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px; padding: 15px; background: #f4f6f8; border-bottom: 1px solid #ddd; }
+        .eval-mini-label { font-size: 10px; font-weight: bold; color: #666; text-transform: uppercase; display: block; margin-bottom: 2px; }
+        
+        /* Grille principale contenu */
+        .eval-main-grid { display: grid; grid-template-columns: 70% 30%; gap: 20px; padding: 20px; }
+        
+        /* Colonne Description */
+        .eval-desc-col { display: flex; flex-direction: column; gap: 15px; }
+        
+        /* Colonne Droite */
+        .eval-side-col { background: #fafafa; padding: 15px; border: 1px solid #eee; border-radius: 4px; }
+        .eval-section-title { font-size: 11px; font-weight: 800; color: var(--col-primary); text-transform: uppercase; border-bottom: 2px solid #eee; margin-bottom: 8px; margin-top: 15px; }
+        .eval-section-title:first-child { margin-top: 0; }
+
+        h3 { color: var(--col-primary); font-size: 20px; border-bottom: 2px solid var(--col-secondary); padding-bottom: 10px; margin-top: 50px; page-break-before: always; }
+
+        /* EXPORT WORD */
+        .word-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-family: Arial, sans-serif; font-size: 11px; }
+        .word-table td { border: 1px solid #999; padding: 5px; vertical-align: top; }
+
+        @media print {
+            .control-bar, .btn-add, .instructions-box, .btn-help-fad, .btn-fad-resource, .spinner-btn { display: none !important; }
+            .container { box-shadow: none; padding: 0; width: 100%; max-width: 100%; }
+            textarea, input, select { border: none !important; resize: none; background: transparent !important; padding: 0; }
+            select { appearance: none; font-weight: bold; color: black; }
+            .week-global-header, .eval-header { -webkit-print-color-adjust: exact; color: white !important; }
+            .spinner-input { text-align: left; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <div class="instructions-box">
+        <div class="instructions-icon">📝</div>
+        <div class="instructions-content">
+            <div style="display:flex; align-items:center; flex-wrap:wrap; margin-bottom:5px;">
+                <strong>Guide de l'enseignant :</strong>
+                <!-- BOUTON RESSOURCE -->
+                <a href="https://fadio.net/wp-content/uploads/2022/06/Criteres-de-qualite-dun-cours-en-FAD-1.pdf" target="_blank" class="btn-fad-resource">
+                    📘 Critères de qualité d'un cours en FAD
+                </a>
+            </div>
+            
+            <div style="margin: 8px 0 12px 0; color: #b03a2e; font-weight: bold; background: rgba(255,255,255,0.5); padding: 5px; border-radius: 4px; border-left: 3px solid #b03a2e;">
+                ⚠️ RAPPEL IMPORTANT : Pour concevoir votre plan de cours, vous devez impérativement vous référer au Plan-Cadre officiel. Ce document est disponible dans le Teams du programme.
+            </div>
+
+            <ul>
+                <li><strong>1. Démarrage :</strong> Sélectionnez votre <strong>Titre de cours</strong>. Les données officielles (Devis) se chargeront.</li>
+                <li><strong>2. Planification :</strong> Indiquez la <strong>Date</strong> et choisissez l'<strong>Élément de compétence</strong> pour chaque séquence.</li>
+                <li><strong>3. Saisie rapide :</strong> Utilisez les boutons <strong>"-" et "+"</strong> pour ajuster le temps (min) et la pondération (%) par tranche de 5.</li>
+                <li><strong>4. Évaluations :</strong> Précisez la modalité, le format, le type et l'élément de compétence relié.</li>
+                <li><strong>5. Sauvegarde & Reprise :</strong> Cliquez sur <strong>"💾 Sauvegarder (JSON)"</strong> pour enregistrer une copie de travail. Utilisez <strong>"📂 Ouvrir"</strong> pour réimporter ce fichier ultérieurement.</li>
+                <li><strong>6. Finalisation :</strong> Cliquez sur <strong>"📄 Exporter en Word"</strong> pour le document final.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="control-bar">
+        <button class="btn btn-save" type="button" onclick="saveData()">💾 Sauvegarder (JSON)</button>
+        <button class="btn btn-load" type="button" onclick="document.getElementById('fileInput').click()">📂 Ouvrir</button>
+        <input type="file" id="fileInput" accept=".json" onchange="loadData(this)">
+        <div style="flex-grow:1"></div>
+        <button class="btn btn-word" type="button" onclick="exportToWordDocx()">📄 Exporter en Word</button>
+        <button class="btn btn-print" type="button" onclick="window.print()">🖨️ Imprimer</button>
+    </div>
+
+    <header>
+        <div>
+            <h1>Techniques de pharmacie</h1>
+            <h2>Planification de cours (15 semaines) - Mode hybride/FAD</h2>
+            <div id="currentDateDisplay" class="date-display"></div>
+        </div>
+        <div style="text-align: right;">
+            <div style="background: var(--col-primary); color: white; padding: 5px 15px; font-weight: bold; border-radius: 4px;">165.A0</div>
+        </div>
+    </header>
+
+    <form id="planningForm">
+        <!-- INFO COURS -->
+        <section class="info-grid">
+            <div class="info-col-left">
+                <div class="input-group">
+                    <label>Titre du cours</label>
+                    <select id="courseSelect" name="courseSelect" onchange="updateCourseInfo()">
+                        <option value="">-- Sélectionnez un cours du programme --</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Nom de l'enseignant(e)</label>
+                    <input type="text" name="teacherName" placeholder="Entrez votre nom">
+                </div>
+                <div class="input-group">
+                    <label>Description du cours (Devis Local)</label>
+                    <textarea id="descriptionArea" name="descriptionArea" style="height: 160px; background-color: #f9f9f9;" readonly></textarea>
+                </div>
+                <div class="input-group">
+                    <label>Activités d'apprentissage suggérées</label>
+                    <textarea id="activitiesArea" name="activitiesArea" style="height: 100px; background-color: #f9f9f9;" readonly></textarea>
+                </div>
+            </div>
+
+            <div class="info-col-right">
+                <div class="input-group" style="flex-grow: 1;">
+                    <label>Compétences et Éléments ciblés</label>
+                    <textarea id="competencyArea" name="competencyArea" style="height: 240px; background-color: #f0f4f6; border: 2px solid var(--col-secondary); font-weight: 500;" readonly></textarea>
+                </div>
+                <div class="input-group">
+                    <label>Contexte de réalisation de la compétence</label>
+                    <textarea id="contextArea" name="contextArea" style="height: 100px; background-color: #fffbeb; border-color: var(--col-alert);" readonly placeholder="Sélectionnez un cours pour voir le contexte..."></textarea>
+                </div>
+            </div>
+        </section>
+
+        <!-- CONTENEUR SEMAINES -->
+        <div id="weeks-container"></div>
+
+        <!-- CONTENEUR ÉVALUATIONS -->
+        <h3>Planification des Évaluations</h3>
+        <div id="evaluations-container"></div>
+        <button type="button" class="btn btn-add" id="btn-add-eval" onclick="addEvaluationRow()">+ Ajouter une évaluation</button>
+    </form>
+
+</div>
+
+<script>
+    // VARIABLE POUR LA SÉCURITÉ (Modifications non enregistrées)
+    let unsavedChanges = false;
+
+    // Détecter les changements
+    document.getElementById('planningForm').addEventListener('change', function() { unsavedChanges = true; });
+    document.getElementById('planningForm').addEventListener('input', function() { unsavedChanges = true; });
+
+    // Avertissement fermeture fenêtre
+    window.addEventListener('beforeunload', function (e) {
+        if (unsavedChanges) {
+            e.preventDefault();
+            // Le message standard du navigateur s'affichera
+            e.returnValue = ''; 
+        }
+    });
+
+    // 1. GESTION DES BOUTONS +/-
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('spinner-btn')) {
+            const isPlus = e.target.classList.contains('plus');
+            const input = e.target.parentNode.querySelector('input');
+            let currentVal = parseInt(input.value) || 0;
+            
+            if (isPlus) {
+                input.value = currentVal + 5;
+            } else {
+                if (currentVal >= 5) input.value = currentVal - 5;
+                else input.value = 0;
+            }
+            unsavedChanges = true; // Marquer comme modifié
+        }
+    });
+
+    // 2. DATE AUTOMATIQUE
+    document.addEventListener('DOMContentLoaded', function() {
+        const today = new Date().toLocaleDateString('fr-CA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const formattedDate = today.charAt(0).toUpperCase() + today.slice(1);
+        document.getElementById('currentDateDisplay').textContent = "Date : " + formattedDate;
+    });
+
+    // 3. DONNÉES COMPLÈTES (Techniques de pharmacie 165.A0)
+    // Données extraites de la grille de cours et du programme d'études
+    var currentCompetencyElements = [];
+    const sessions = {
+        "Session 1": {
+            "101-275-RA": {
+                title: "101-275-RA Biologie appliquée à la pharmacie I",
+                desc: "Ce cours vise à développer une vision intégrée de l'organisme humain et à caractériser les principaux problèmes de santé. Il constitue la base biologique pour la compréhension de l'action des médicaments.",
+                context: "• En soutien aux services pharmaceutiques.\n• Pour tous les systèmes du corps humain.\n• À partir d'informations médicales et scientifiques.",
+                comp: "00Q0: Développer une vision intégrée de l'organisme humain.\n02AZ: Caractériser les principaux problèmes de santé et les maladies.",
+                act: "• Laboratoires d'anatomie et physiologie.\n• Études de cas cliniques simples.\n• Exercices de terminologie médicale.",
+                elements: [
+                    {text: "1. Se représenter l’anatomie du corps humain (00Q0).", criteria: "• Localisation précise.\n• Organisation structurale.\n• Liens structuraux."},
+                    {text: "2. Caractériser le fonctionnement normal (00Q0).", criteria: "• Fonctions systèmes.\n• Caractéristiques physiologiques.\n• Liens fonctionnels."},
+                    {text: "3. Corps humain et équilibre (00Q0).", criteria: "• Homéostasie.\n• Facteurs de perturbation."},
+                    {text: "1. Corréler problèmes santé/systèmes (02AZ).", criteria: "• Étiologie/Physiopathologie.\n• Facteurs risques.\n• Manifestations cliniques."},
+                    {text: "2. Relier désordres immuno/infectieux (02AZ).", criteria: "• Type agresseur.\n• Modes transmission.\n• Processus évolutif."},
+                    {text: "3. Reconnaître cancers (02AZ).", criteria: "• Cancers prévalents.\n• Facteurs risque.\n• Processus physiopathologique."}
+                ]
+            },
+            "412-423-RA": {
+                title: "412-423-RA Outils bureautiques et technologiques",
+                desc: "Ce cours permet d'exploiter les technologies de l'information (systèmes d'information, logiciels bureautiques) et de collaborer au fonctionnement administratif d'une pharmacie.",
+                context: "• À l’aide de la documentation de référence et des outils technologiques.\n• À partir des politiques et procédures.",
+                comp: "02BP: Exploiter les technologies de l'information et de la télécommunication.\n02BV: Collaborer au fonctionnement administratif d'une pharmacie.",
+                act: "• Ateliers sur logiciels de pharmacie.\n• Création de documents administratifs.\n• Gestion de dossiers patients informatisés.",
+                elements: [
+                    {text: "1. Distinguer les systèmes d’information (02BP).", criteria: "• Caractérisation juste.\n• Distinction établissements/communautaires."},
+                    {text: "2. Gérer un poste de travail informatique (02BP).", criteria: "• Personnalisation.\n• Gestion fichiers.\n• Communication."},
+                    {text: "3. Exploiter logiciels bureautique (02BP).", criteria: "• Bases de données.\n• Tableaux/Graphiques.\n• Présentations."},
+                    {text: "4. Exploiter systèmes pharmacie (02BP).", criteria: "• Fonctionnalités.\n• Modules applicatifs."},
+                    {text: "1. Contribuer gestion ressources (02BV).", criteria: "• Techniques gestion.\n• Gestion changement."},
+                    {text: "2. Examiner fonctionnement admin (02BV).", criteria: "• Modalités acquisition.\n• Programmes accès.\n• Financement."}
+                ]
+            },
+            "165-384-RA": {
+                title: "165-384-RA Introduction aux médicaments et aux ordonnances",
+                desc: "Ce cours initie l'étudiant aux caractéristiques des médicaments (classification, pharmacologie de base) et à la coordination de leur conditionnement.",
+                context: "• Pour tout type de médicament.\n• À l’aide de la documentation de référence.\n• À partir d'ordonnances.",
+                comp: "02BK: Discerner les caractéristiques des médicaments.\n02BS: Coordonner le conditionnement des médicaments.",
+                act: "• Exercices de classification des médicaments.\n• Lecture et analyse d'ordonnances.\n• Laboratoires de conditionnement.",
+                elements: [
+                    {text: "1. Catégoriser les médicaments (02BK).", criteria: "• Nomenclature.\n• Classification.\n• Formes/Voies.\n• Termes/Abréviations."},
+                    {text: "2. Recherche d’information (02BK).", criteria: "• Sources (primaires/sec/tert).\n• Données probantes."},
+                    {text: "3. Pharmacocinétique (02BK).", criteria: "• Paramètres (ADME).\n• Liens concentration/effet."},
+                    {text: "4. Mécanismes d’action (02BK).", criteria: "• Principaux mécanismes.\n• Placebo/Nocebo."},
+                    {text: "1. Caractériser modes conditionnement (02BS).", criteria: "• Avantages/Désavantages.\n• Précautions spécifiques."},
+                    {text: "2. Encadrer activités conditionnement (02BS).", criteria: "• Maîtrise techniques.\n• Supervision stricte."}
+                ]
+            },
+            "165-414-RA": {
+                title: "165-414-RA Introduction à la profession",
+                desc: "Ce cours analyse la fonction de travail du technicien en pharmacie, le cadre légal, éthique et organisationnel de la profession.",
+                context: "• En se référant à l’organisation du réseau de la santé.\n• À partir des lois, règlements et normes.",
+                comp: "00HA: Analyser la fonction de travail.",
+                act: "• Recherche documentaire sur la profession.\n• Rencontres avec des professionnels.\n• Visites de milieux de travail.",
+                elements: [
+                    {text: "1. Caractériser l’organisation des services (00HA).", criteria: "• Histoire.\n• Réseau santé.\n• Distinction milieux."},
+                    {text: "2. Caractériser la profession (00HA).", criteria: "• Définition.\n• Conditions accès.\n• Formation/Éthique."},
+                    {text: "3. Caractériser circuit médicament (00HA).", criteria: "• Étapes.\n• Organisation physique."},
+                    {text: "4. Examiner tâches et habiletés (00HA).", criteria: "• Tâches/Opérations.\n• Comportements.\n• Liens habiletés."},
+                    {text: "5. Examiner exigences législatives (00HA).", criteria: "• Lois/Règlements.\n• Normes OPQ.\n• Limites pratique."},
+                    {text: "6. Discerner rôles organisations (00HA).", criteria: "• Instances.\n• Industrie pharmaceutique."}
+                ]
+            },
+            "165-426-RA": {
+                title: "165-426-RA Le devenir du médicament dans l'organisme I",
+                desc: "Ce cours approfondit les caractéristiques des médicaments et analyse leur usage et leurs effets sur l'organisme humain (Pharmacologie I).",
+                context: "• Pour les médicaments les plus prévalents.\n• À partir des classes pharmacothérapeutiques.",
+                comp: "02BK: Discerner les caractéristiques des médicaments.\n02BL: Analyser l’usage des médicaments et leurs effets sur l’organisme humain.",
+                act: "• Études de cas pharmacologiques.\n• Analyse des effets secondaires et interactions.\n• Recherche sur les classes médicamenteuses.",
+                elements: [
+                    {text: "3. Distinguer pharmacocinétique (02BK).", criteria: "• Paramètres.\n• Concentration/Temps."},
+                    {text: "4. Distinguer mécanismes d’action (02BK).", criteria: "• Types utilisation.\n• Mécanismes d'action."},
+                    {text: "5. Cerner facteurs influençant (02BK).", criteria: "• Facteurs physio/patho.\n• Allergies/Intolérances.\n• Interactions."},
+                    {text: "1. Établir liens médicaments/usages (02BL).", criteria: "• Conditions santé.\n• Usages classes."},
+                    {text: "2. Examiner effets (02BL).", criteria: "• Posologies.\n• Effets attendus/indésirables.\n• Précautions."}
+                ]
+            }
+        },
+        "Session 2": {
+            "101-285-RA": {
+                title: "101-285-RA Biologie appliquée à la pharmacie II",
+                desc: "Suite de la biologie appliquée, visant à compléter la vision intégrée de l'organisme et la caractérisation des problèmes de santé.",
+                context: "• En soutien aux services pharmaceutiques.\n• Pour tous les systèmes du corps humain.",
+                comp: "00Q0: Développer une vision intégrée de l'organisme humain.\n02AZ: Caractériser les principaux problèmes de santé et les maladies.",
+                act: "• Laboratoires de physiologie avancée.\n• Études de pathologies complexes.\n• Liens anatomie-pathologie.",
+                elements: [
+                    {text: "1. Se représenter l’anatomie (00Q0).", criteria: "• Systèmes restants.\n• Liens structuraux."},
+                    {text: "2. Caractériser fonctionnement (00Q0).", criteria: "• Physiologie systémique.\n• Réactions biochimiques."},
+                    {text: "4. Saisir incidence déséquilibre (00Q0).", criteria: "• Modalités apparition.\n• Processus physiologiques."},
+                    {text: "1. Corréler problèmes santé (02AZ).", criteria: "• Étiologie.\n• Manifestations cliniques.\n• Processus évolutif."}
+                ]
+            },
+            "201-294-RA": {
+                title: "201-294-RA Mathématiques en techniques de pharmacie",
+                desc: "Ce cours couvre les calculs pharmaceutiques nécessaires à la pratique : conversions, dosages, débits, et statistiques de base.",
+                context: "• À partir d’ordonnances et de rapports.\n• À l’aide de la documentation de référence.",
+                comp: "02BM: Traiter des données mathématiques liées aux activités pharmaceutiques.",
+                act: "• Exercices de calculs de doses.\n• Conversion d'unités.\n• Calculs de marge bénéficiaire.",
+                elements: [
+                    {text: "1. Établir conversions (02BM).", criteria: "• Unités pondérales/volumétriques.\n• Équivalences.\n• Pourcentages."},
+                    {text: "2. Effectuer calculs pharmaceutiques (02BM).", criteria: "• Règles proportionnalité/dilution/alligation.\n• Calcul dose/débit."},
+                    {text: "3. Élaborer outils conversion (02BM).", criteria: "• Pertinence.\n• Exactitude."},
+                    {text: "4. Effectuer calculs administratifs (02BM).", criteria: "• Prix détail/Marge.\n• Coût revient.\n• Ratios personnel."},
+                    {text: "5. Interpréter résultats statistiques (02BM).", criteria: "• Moyenne/Médiane.\n• Mesures épidémiologiques."}
+                ]
+            },
+            "350-264-RA": {
+                title: "350-264-RA Communication professionnelle en pharmacie",
+                desc: "Développement des compétences communicationnelles en contexte professionnel, prévention des atteintes à la santé/sécurité (aspect psychosocial) et interaction.",
+                context: "• Dans des situations professionnelles variées.\n• Avec patients, collègues, professionnels.",
+                comp: "02BN: Prévenir les atteintes à la santé, à la sécurité et à l'environnement.\n02BR: Interagir en contexte professionnel.",
+                act: "• Mises en situation et jeux de rôles.\n• Gestion de situations difficiles.\n• Rédaction professionnelle.",
+                elements: [
+                    {text: "3. Associer moyens prévention (02BN).", criteria: "• Équilibre psycho.\n• Gestion stress.\n• Procédures prévention."},
+                    {text: "1. Communiquer professionnellement (02BR).", criteria: "• Verbale/Non-verbale.\n• Écoute active.\n• Approche adaptée."},
+                    {text: "2. Rédiger documents (02BR).", criteria: "• Types documents.\n• Synthèse.\n• Règles rédaction."},
+                    {text: "3. Travailler en équipe (02BR).", criteria: "• Leadership.\n• Ouverture.\n• Prise décision."},
+                    {text: "4. Gestion conflits (02BR).", criteria: "• Concertation.\n• Solution consensuelle.\n• Introspection."}
+                ]
+            },
+            "165-234-RA": {
+                title: "165-234-RA Le devenir du médicament dans l'organisme II",
+                desc: "Suite de l'analyse de l'usage des médicaments (Pharmacologie II). Approfondissement des classes thérapeutiques.",
+                context: "• Pour les médicaments sur prescription et en vente libre.\n• À partir des classes pharmacothérapeutiques.",
+                comp: "02BK: Discerner les caractéristiques des médicaments.\n02BL: Analyser l’usage des médicaments et leurs effets sur l’organisme humain.",
+                act: "• Étude des classes pharmacologiques spécifiques.\n• Analyse de dossiers pharmacologiques.",
+                elements: [
+                    {text: "1. Catégoriser médicaments (02BK).", criteria: "• Nomenclature.\n• Classification.\n• Formes."},
+                    {text: "4. Distinguer mécanismes (02BK).", criteria: "• Mécanismes action.\n• Association classes."},
+                    {text: "1. Établir liens usages (02BL).", criteria: "• Conditions santé.\n• Usages."},
+                    {text: "2. Examiner effets (02BL).", criteria: "• Posologies.\n• Effets/Toxicités.\n• Interactions."},
+                    {text: "3. Liens renseignements cliniques (02BL).", criteria: "• Suivis requis.\n• Valeurs labo."}
+                ]
+            },
+            "165-394-RA": {
+                title: "165-394-RA Introduction aux logiciels en pharmacie",
+                desc: "Exploitation approfondie des technologies de l'information : logiciels de gestion de pharmacie (Rx) et équipements connectés.",
+                context: "• À l’aide d’outils technologiques (systèmes pharmacie, logiciels équipements).",
+                comp: "02BP: Exploiter les technologies de l'information et de la télécommunication.",
+                act: "• Simulation sur logiciels spécialisés (ex: RxPro, Ubik).\n• Gestion de bases de données médicaments.",
+                elements: [
+                    {text: "1. Distinguer systèmes (02BP).", criteria: "• Caractérisation.\n• Distinction milieux."},
+                    {text: "2. Gérer poste travail (02BP).", criteria: "• Environnement.\n• Sites Internet.\n• Fichiers."},
+                    {text: "4. Exploiter systèmes pharmacie (02BP).", criteria: "• Fonctionnalités.\n• Modules applicatifs.\n• Utilisation optimale."},
+                    {text: "5. Exploiter logiciels équipements (02BP).", criteria: "• Fonctionnalités.\n• Santé connectée."},
+                    {text: "6. Exploiter logiciels connexes (02BP).", criteria: "• Outils aide décision."}
+                ]
+            }
+        },
+        "Session 3": {
+            "165-406-RA": {
+                title: "165-406-RA Le devenir du médicament dans l'organisme III",
+                desc: "Dernier volet de pharmacologie. Analyse complexe des usages et effets des médicaments.",
+                context: "• Pour les médicaments complexes et situations particulières.",
+                comp: "02BK: Discerner les caractéristiques des médicaments.\n02BL: Analyser l’usage des médicaments et leurs effets sur l’organisme humain.",
+                act: "• Études de cas complexes.\n• Analyse de polypharmacie.",
+                elements: [
+                    {text: "1. Catégoriser médicaments (02BK).", criteria: "• Bioéquivalence/Biosimilarité."},
+                    {text: "5. Cerner facteurs influençant (02BK).", criteria: "• Facteurs physio/patho.\n• Tolérance/Dépendance."},
+                    {text: "1. Établir liens usages (02BL).", criteria: "• Usages classes complexes."},
+                    {text: "2. Examiner effets (02BL).", criteria: "• Effets indésirables graves.\n• Interactions complexes."},
+                    {text: "3. Liens renseignements cliniques (02BL).", criteria: "• Suivis cliniques.\n• Paramètres hors valeurs."}
+                ]
+            },
+            "165-435-RA": {
+                title: "165-435-RA Préparations non stériles",
+                desc: "Ce cours traite de la coordination et de l'exécution des préparations magistrales non stériles (crèmes, onguents, liquides oraux, etc.).",
+                context: "• Pour la préparation de médicaments dangereux et non dangereux.\n• Dans des conditions contrôlées.",
+                comp: "02BN: Prévenir les atteintes à la santé/sécurité.\n02BT: Coordonner les préparations magistrales non stériles.",
+                act: "• Laboratoires de préparations magistrales.\n• Calculs de formulation.\n• Rédaction de formules maîtresses.",
+                elements: [
+                    {text: "4. Prévention contamination (02BN).", criteria: "• Risques chimiques.\n• Précautions manipulation."},
+                    {text: "1. Application cadre normatif (02BT).", criteria: "• Prescriptions.\n• Catégorisation préparations."},
+                    {text: "2. Rédiger formules maîtresses (02BT).", criteria: "• Compatibilité.\n• Calculs.\n• Étapes critiques."},
+                    {text: "3. Encadrer activités (02BT).", criteria: "• Techniques.\n• Supervision.\n• Conséquences erreurs."},
+                    {text: "4. Veiller conformité (02BT).", criteria: "• Double vérification.\n• Étiquetage.\n• Entreposage."}
+                ]
+            },
+            "165-446-RA": {
+                title: "165-446-RA Conditionnement des médicaments I",
+                desc: "Coordination du conditionnement des médicaments, utilisation des équipements (automates) et gestion des opérations associées.",
+                context: "• Pour les services pharmaceutiques.\n• À l’aide des équipements et appareils.",
+                comp: "02BQ: Exploiter des équipements et des appareils.\n02BS: Coordonner le conditionnement des médicaments.",
+                act: "• Utilisation d'automates de conditionnement.\n• Procédures de ré-emballage.",
+                elements: [
+                    {text: "3. Exploiter équipements (02BQ).", criteria: "• Utilisation.\n• Entretien.\n• Étalonnage."},
+                    {text: "1. Caractériser modes (02BS).", criteria: "• Avantages/Désavantages.\n• Concordance."},
+                    {text: "2. Encadrer activités (02BS).", criteria: "• Techniques manipulation.\n• Supervision procédures."},
+                    {text: "3. Veiller conformité (02BS).", criteria: "• Étiquetage.\n• Dates limites.\n• Traçabilité."},
+                    {text: "5. Veiller consignation (02BS).", criteria: "• Registres.\n• Archivage."}
+                ]
+            }
+        },
+        "Session 4": {
+            "410-4L3-RA": {
+                title: "410-4L3-RA Pratiques de gestion en pharmacie",
+                desc: "Ce cours aborde les aspects administratifs : calculs financiers, gestion des opérations, approvisionnement et contrôle des activités.",
+                context: "• En collaboration avec le personnel administratif et technique.",
+                comp: "02BM: Traiter des données mathématiques.\n02BV: Collaborer au fonctionnement administratif.\n02BY: Contrôler les opérations de la chaine d'approvisionnement.",
+                act: "• Calculs de prix et marges.\n• Gestion des stocks.\n• Simulation de gestion administrative.",
+                elements: [
+                    {text: "4. Calculs administratifs (02BM).", criteria: "• Prix/Marge.\n• Coût revient."},
+                    {text: "2. Examiner fonctionnement (02BV).", criteria: "• Modalités acquisition.\n• Financement/Dépenses."},
+                    {text: "3. Soutenir facturation (02BV).", criteria: "• Assurances.\n• Actes pharmaceutiques.\n• Conciliation."},
+                    {text: "1. Caractériser stocks (02BY).", criteria: "• Paramètres chaîne.\n• Lieux entreposage."},
+                    {text: "2. Contrôler approvisionnement (02BY).", criteria: "• Bases données.\n• Rapports consommation.\n• Règles budgétaires."}
+                ]
+            },
+            "180-454-RA": {
+                title: "180-454-RA Problèmes de santé et maladies",
+                desc: "Approfondissement des pathologies et prévention des atteintes à la santé.",
+                context: "• Pour les maladies prévalentes.\n• À partir d'informations cliniques.",
+                comp: "02AZ: Caractériser les principaux problèmes de santé.\n02BN: Prévenir les atteintes à la santé et sécurité.",
+                act: "• Étude de physiopathologie.\n• Mesures de prévention et contrôle des infections.",
+                elements: [
+                    {text: "1. Corréler problèmes santé (02AZ).", criteria: "• Étiologie.\n• Facteurs risques.\n• Processus évolutif."},
+                    {text: "4. Prévention infections (02BN).", criteria: "• Processus infectieux.\n• Pratiques asepsie.\n• Entretien aires."}
+                ]
+            },
+            "165-304-RA": {
+                title: "165-304-RA Contrôle de la chaîne d'approvisionnement",
+                desc: "Gestion complète de la chaîne d'approvisionnement : réception, entreposage, inventaire, retours et destruction.",
+                context: "• Pour tous les médicaments et fournitures.",
+                comp: "02BY: Contrôler les opérations de la chaine d'approvisionnement.",
+                act: "• Simulation de réception et gestion des écarts.\n• Inventaires.\n• Gestion des périmés.",
+                elements: [
+                    {text: "3. Contrôler réception (02BY).", criteria: "• Procédures.\n• Suivi écarts."},
+                    {text: "4. Contrôler entreposage (02BY).", criteria: "• Chaîne de froid.\n• Sécurité.\n• Traçabilité."},
+                    {text: "5. Contrôler stocks (02BY).", criteria: "• Inventaires.\n• Analyse écarts."},
+                    {text: "6. Retours et rappels (02BY).", criteria: "• Fournisseurs.\n• Gestion rappels."},
+                    {text: "7. Contrôler destruction (02BY).", criteria: "• Déchets biomédicaux.\n• Procédures."}
+                ]
+            },
+            "165-456-RA": {
+                title: "165-456-RA Conditionnement des médicaments II",
+                desc: "Perfectionnement en conditionnement, utilisation avancée des technologies et coordination.",
+                context: "• À l’aide d’équipements et de technologies.",
+                comp: "02BP: Exploiter technologies info.\n02BQ: Exploiter équipements.\n02BS: Coordonner le conditionnement.",
+                act: "• Conditionnement complexe.\n• Gestion des automates.",
+                elements: [
+                    {text: "5. Logiciels équipements (02BP).", criteria: "• Fonctionnalités.\n• Modules applicatifs."},
+                    {text: "3. Exploiter équipements (02BQ).", criteria: "• Entretien/Étalonnage.\n• Registres."},
+                    {text: "3. Veiller conformité (02BS).", criteria: "• Concordance.\n• Rectification anomalies."},
+                    {text: "5. Veiller consignation (02BS).", criteria: "• Traçabilité.\n• Archivage."}
+                ]
+            },
+            "165-467-RA": {
+                title: "165-467-RA Préparation de produits stériles",
+                desc: "Coordination et exécution des préparations stériles dangereuses et non dangereuses.",
+                context: "• Dans des conditions contrôlées (salles blanches, hottes).",
+                comp: "02BU: Coordonner la préparation de produits stériles.",
+                act: "• Techniques aseptiques avancées.\n• Préparations oncologiques.\n• Contrôles environnementaux.",
+                elements: [
+                    {text: "1. Application cadre normatif (02BU).", criteria: "• Produits dangereux/non.\n• Niveaux risque."},
+                    {text: "2. Rédiger protocoles (02BU).", criteria: "• Compatibilité.\n• Calculs.\n• Vérification."},
+                    {text: "3. Encadrer activités (02BU).", criteria: "• Techniques.\n• Supervision."},
+                    {text: "4. Veiller conformité (02BU).", criteria: "• Double vérification.\n• Étiquetage.\n• Entreposage."},
+                    {text: "6. Veiller consignation (02BU).", criteria: "• Registres.\n• Traçabilité."}
+                ]
+            },
+            "165-47S-RA": {
+                title: "165-47S-RA Stage I",
+                desc: "Premier stage d'intégration en milieu professionnel (communautaire ou hospitalier).",
+                context: "• En milieu réel.\n• Sous supervision.",
+                comp: "02BN: Prévenir atteintes santé.\n02BR: Interagir.\n02BZ: Contrôler activités circuit.\n02C9: Gérer technologies.",
+                act: "• Intégration à l'équipe.\n• Exécution tâches techniques.\n• Service client.",
+                elements: [
+                    {text: "Adopter attitudes professionnelles (02BR).", criteria: "• Respect.\n• Communication.\n• Éthique."},
+                    {text: "Appliquer mesures sécurité (02BN).", criteria: "• Prévention.\n• Hygiène."},
+                    {text: "Coordonner activités (02BZ).", criteria: "• Priorités.\n• Flux de travail."},
+                    {text: "Utiliser technologies (02C9).", criteria: "• Logiciels.\n• Équipements."}
+                ]
+            }
+        },
+        "Session 5": {
+            "410-4M4-RA": {
+                title: "410-4M4-RA Gestion du personnel en pharmacie",
+                desc: "Gestion des ressources humaines techniques : embauche, formation, évaluation, horaires.",
+                context: "• En collaboration avec le pharmacien.",
+                comp: "02BV: Collaborer fonctionnement admin.\n02BX: Gérer le personnel technique.",
+                act: "• Simulation gestion RH.\n• Planification horaires.\n• Évaluation rendement.",
+                elements: [
+                    {text: "1. Gestion ressources (02BV).", criteria: "• Techniques gestion.\n• Gestion changement."},
+                    {text: "1. Processus embauche (02BX).", criteria: "• Besoins.\n• Entrevues."},
+                    {text: "2. Accueil/Orientation (02BX).", criteria: "• Programme orientation.\n• Intégration."},
+                    {text: "4. Gestion horaires (02BX).", criteria: "• Disponibilités.\n• Besoins opérationnels."},
+                    {text: "5. Apprécier rendement (02BX).", criteria: "• Indicateurs.\n• Rétroaction."},
+                    {text: "7. Coordonner formation (02BX).", criteria: "• Besoins formation.\n• Planification."}
+                ]
+            },
+            "180-464-RA": {
+                title: "180-464-RA RCR, administration de médicaments et prélèvements",
+                desc: "Compétences cliniques techniques : RCR, administration de médicaments, prélèvements.",
+                context: "• Situations d'urgence.\n• Soins aux patients.",
+                comp: "02BN: Prévenir atteintes santé.\n02CA: Collaborer prise en charge thérapie.",
+                act: "• Formation RCR.\n• Techniques d'injection/prélèvement.\n• Mesures d'urgence.",
+                elements: [
+                    {text: "6. Appliquer mesures urgence (02BN).", criteria: "• Protocoles urgence.\n• Premiers soins."},
+                    {text: "7. Techniques administration (02CA).", criteria: "• Voies administration.\n• Asepsie.\n• Consignation."},
+                    {text: "8. Techniques prélèvement (02CA).", criteria: "• Précautions.\n• Techniques.\n• Conservation."}
+                ]
+            },
+            "165-325-RA": {
+                title: "165-325-RA Fonctionnement administratif d'une pharmacie",
+                desc: "Approfondissement de la gestion administrative : facturation, gestion documentaire, rayonnement.",
+                context: "• En pharmacie communautaire et établissement.",
+                comp: "02BV: Collaborer au fonctionnement administratif.\n02BX: Gérer personnel (partiel).",
+                act: "• Gestion complexe facturation.\n• Gestion documentaire.\n• Activités promotionnelles.",
+                elements: [
+                    {text: "3. Soutenir facturation (02BV).", criteria: "• Programmes assurance.\n• Réclamations complexes."},
+                    {text: "4. Gestion documentaire (02BV).", criteria: "• Classement/Archivage.\n• Épuration."},
+                    {text: "5. Participer rayonnement (02BV).", criteria: "• Promotion santé.\n• Partenariats."},
+                    {text: "3. Structurer organisation travail (02BX).", criteria: "• Processus travail.\n• Tâches."}
+                ]
+            },
+            "165-336-RA": {
+                title: "165-336-RA Contrôle du circuit du médicament",
+                desc: "Contrôle global des activités techniques : traitement ordonnances, distribution, qualité, technologies.",
+                context: "• Pour l'ensemble du circuit du médicament.",
+                comp: "02BZ: Contrôler des activités liées au circuit du médicament.\n02C9: Gérer les technologies liées au circuit.",
+                act: "• Supervision flux de travail.\n• Contrôle qualité ordonnances.\n• Gestion pannes technologiques.",
+                elements: [
+                    {text: "1. Coordonner activités (02BZ).", criteria: "• Priorités.\n• Goulots.\n• Ajustements."},
+                    {text: "2. Assurer traitement ordonnances (02BZ).", criteria: "• Délais.\n• Validation.\n• Résolution problèmes."},
+                    {text: "3. Assurer distribution (02BZ).", criteria: "• Moyens technologiques.\n• Rapports.\n• Fluctuations."},
+                    {text: "1. Optimiser systèmes (02C9).", criteria: "• Interfaces.\n• Mises à jour."},
+                    {text: "3. Pallier dysfonctionnements (02C9).", criteria: "• Appels service.\n• Plan contingence."}
+                ]
+            },
+            "165-486-RA": {
+                title: "165-486-RA Prise en charge de la thérapie médicamenteuse",
+                desc: "Collaboration clinique : collecte de données, bilan comparatif, enseignement technique aux patients.",
+                context: "• En collaboration avec l'équipe de soins.",
+                comp: "02CA: Collaborer à la prise en charge de la thérapie médicamenteuse.",
+                act: "• Entrevues patients.\n• Bilan comparatif.\n• Enseignement dispositifs.",
+                elements: [
+                    {text: "1. Contribuer collecte renseignements (02CA).", criteria: "• Entrevue.\n• Bilan comparatif.\n• Consignation."},
+                    {text: "2. Colliger valeurs (02CA).", criteria: "• Sélection.\n• Corrélation.\n• Résultats hors normes."},
+                    {text: "3. Participer plan prise en charge (02CA).", criteria: "• Mesures cliniques.\n• Détection problèmes.\n• Transmission info."},
+                    {text: "6. Enseigner utilisation appareils (02CA).", criteria: "• Démonstration.\n• Asepsie.\n• Évaluation compréhension."}
+                ]
+            }
+        },
+        "Session 6": {
+            "165-353-RA": {
+                title: "165-353-RA Études cliniques",
+                desc: "Gestion des aspects techniques de la recherche clinique : protocoles, médicaments de recherche.",
+                context: "• Pour des médicaments de recherche.",
+                comp: "02CB: Collaborer à des études cliniques.",
+                act: "• Analyse protocoles.\n• Gestion inventaire recherche.\n• Audits.",
+                elements: [
+                    {text: "1. Reconnaître concepts (02CB).", criteria: "• Phases cliniques.\n• Devis.\n• Éthique."},
+                    {text: "2. Traiter aspects techniques (02CB).", criteria: "• Synthèse protocole.\n• Anticipation problèmes.\n• Procédures."},
+                    {text: "3. Contrôler approvisionnement (02CB).", criteria: "• Stocks.\n• Conservation.\n• Rapports."},
+                    {text: "4. Appliquer protocole (02CB).", criteria: "• Critères inclusion.\n• Consentement.\n• Documentation."},
+                    {text: "5. Veiller conformité doc (02CB).", criteria: "• Registres.\n• Audits.\n• Fermeture études."}
+                ]
+            },
+            "165-36S-RA": {
+                title: "165-36S-RA Stage II et préparation à la certification",
+                desc: "Stage final d'intégration et consolidation des compétences pour la pratique autonome.",
+                context: "• En milieu de travail.\n• Préparation à l'examen de l'ordre/certification.",
+                comp: "Intégration de l'ensemble des compétences spécifiques (02BU, 02BX, 02BY, 02BZ, 02C9, 02CA).",
+                act: "• Pratique autonome.\n• Gestion complète de tâches.\n• Résolution de problèmes complexes.",
+                elements: [
+                    {text: "Intégration pratique.", criteria: "• Autonomie.\n• Qualité travail.\n• Vitesse exécution."},
+                    {text: "Gestion complète circuit.", criteria: "• De l'ordonnance à la remise.\n• Vérification."},
+                    {text: "Attitudes professionnelles.", criteria: "• Éthique.\n• Collaboration.\n• Responsabilité."}
+                ]
+            },
+            "165-493-RA": {
+                title: "165-493-RA Contrôle de la qualité et amélioration continue",
+                desc: "Mise en œuvre de programmes de qualité, gestion des risques et amélioration des processus.",
+                context: "• Pour les processus du circuit du médicament.",
+                comp: "02BW: Collaborer au contrôle de la qualité et à l'amélioration continue.",
+                act: "• Analyse d'incidents.\n• Audits de qualité.\n• Rédaction de procédures.",
+                elements: [
+                    {text: "1. Moyens contrôle qualité (02BW).", criteria: "• Principes QA/QC.\n• Étapes critiques.\n• Registres traçabilité."},
+                    {text: "2. Gestion des risques (02BW).", criteria: "• Facteurs risque.\n• Rapports événements.\n• Mesures correctives."},
+                    {text: "3. Amélioration continue (02BW).", criteria: "• Méthodes.\n• Suivi solutions.\n• Comités."},
+                    {text: "4. Activités accréditation (02BW).", criteria: "• Organismes.\n• Inspection.\n• Plans amélioration."},
+                    {text: "5. Mesurer performance (02BW).", criteria: "• Indicateurs.\n• Audits."},
+                    {text: "6. Actualiser procédures (02BW).", criteria: "• Rédaction.\n• Révision.\n• Diffusion."}
+                ]
+            }
+        }
+    };
+
+    // 4. INITIALISATION
+    const selectElement = document.getElementById('courseSelect');
+    for (const [sessionName, courses] of Object.entries(sessions)) {
+        const group = document.createElement('optgroup');
+        group.label = sessionName;
+        for (const [code, data] of Object.entries(courses)) {
+            const option = document.createElement('option');
+            option.value = code;
+            option.textContent = data.title;
+            group.appendChild(option);
+        }
+        selectElement.appendChild(group);
+    }
+
+    function updateCourseInfo() {
+        const code = document.getElementById('courseSelect').value;
+        let foundData = null;
+        for (const session in sessions) {
+            if (sessions[session][code]) { foundData = sessions[session][code]; break; }
+        }
+
+        if (foundData) {
+            document.getElementById('descriptionArea').value = foundData.desc;
+            document.getElementById('contextArea').value = foundData.context || "Contexte non spécifié.";
+            document.getElementById('competencyArea').value = foundData.comp;
+            document.getElementById('activitiesArea').value = foundData.act;
+            currentCompetencyElements = foundData.elements || [];
+        } else {
+            document.getElementById('descriptionArea').value = "";
+            document.getElementById('contextArea').value = "";
+            document.getElementById('competencyArea').value = "";
+            document.getElementById('activitiesArea').value = "";
+            currentCompetencyElements = [];
+        }
+        updateAllCompetencySelects();
+    }
+
+    function updateAllCompetencySelects() {
+        const selects = document.querySelectorAll('.competency-select');
+        selects.forEach(sel => {
+            const currentVal = sel.value; 
+            sel.innerHTML = '<option value="">-- Choisir Élément Compétence --</option>';
+            currentCompetencyElements.forEach(elem => {
+                const opt = document.createElement('option');
+                opt.value = elem.text; 
+                opt.textContent = "└─ " + (elem.text.length > 80 ? elem.text.substring(0, 80) + '...' : elem.text);
+                opt.title = elem.criteria; 
+                sel.appendChild(opt);
+            });
+            if(currentCompetencyElements.some(e => e.text === currentVal)) sel.value = currentVal;
+        });
+    }
+
+    // 5. GENERATION SEMAINES
+    const weeksContainer = document.getElementById('weeks-container');
+    const tools = [{id: 'zoom', l: 'Zoom/Teams'}, {id: 'moodle', l: 'Moodle'}, {id: 'padlet', l: 'Padlet'}, {id: 'wooclap', l: 'Wooclap'}, {id: 'office', l: 'Office365'}, {id: 'autre', l: 'Autre'}];
+
+    function createSessionHTML(w, s) {
+        let toolsHtml = tools.map(t => 
+            `<label class="checkbox-wrapper">
+                <input type="checkbox" name="w${w}${s}_t_${t.id}"> ${t.l} 
+                ${t.id==='autre'?'<input type="text" name="w'+w+s+'_t_other" placeholder="...">':''}
+            </label>`
+        ).join('');
+
+        // SUGGESTIONS DE CONTENU (PLACEHOLDERS)
+        const ph_cont = "• Théorie, lois et règlements à enseigner...";
+        const ph_prep = "• PowerPoint\n• Feuille de notes\n• Fiches d'activité...";
+        const ph_stud = "• Lire le texte\n• Travail en équipe\n• Compléter le Padlet...";
+        const ph_build = "• Création d'un Wooclap\n• Vidéo asynchrone\n• Questionnaire...";
+
+        return `
+            <div class="session-row">
+                <div class="session-header-line">
+                    <span class="session-badge">Séquence ${s}</span>
+                    <input type="date" name="w${w}${s}_date">
+                    <select name="w${w}${s}_comp" class="competency-select" style="flex-grow:1;"><option value="">-- Choisir --</option></select>
+                </div>
+                <div class="grid-columns">
+                    <div class="col" style="text-align:center;">
+                        <div class="col-header">Durée</div>
+                        <div class="spinner-group">
+                            <div class="spinner-btn minus">-</div>
+                            <input type="number" name="w${w}${s}_dur" class="spinner-input" value="0" min="0" step="5">
+                            <div class="spinner-btn plus">+</div>
+                        </div>
+                        <span style="font-size:10px; font-weight:bold; color:#888;">min</span>
+                    </div>
+                    
+                    <!-- CONTENU -->
+                    <div class="col">
+                        <div class="col-header">Contenu</div>
+                        <textarea name="w${w}${s}_cont" style="height:80px;" placeholder="${ph_cont}"></textarea>
+                    </div>
+                    
+                    <!-- PRÉPA PROF -->
+                    <div class="col" style="background:#fcfcfc;">
+                        <div class="col-header">Prépa Prof</div>
+                        <textarea name="w${w}${s}_prep" style="height:80px;" placeholder="${ph_prep}"></textarea>
+                    </div>
+                    
+                    <!-- TÂCHE ÉTUDIANT -->
+                    <div class="col">
+                        <div class="col-header">Tâche Étudiant</div>
+                        <textarea name="w${w}${s}_stud" style="height:80px;" placeholder="${ph_stud}"></textarea>
+                    </div>
+                    
+                    <div class="col">
+                        <div class="col-header">Mode & Outils</div>
+                        <div class="mode-selector">
+                            <input type="radio" name="w${w}${s}_mode" value="sync" id="s${w}${s}" class="tag-radio">
+                            <label for="s${w}${s}" class="tag-label sync">SY</label>
+                            <input type="radio" name="w${w}${s}_mode" value="async" id="a${w}${s}" class="tag-radio">
+                            <label for="a${w}${s}" class="tag-label async">AS</label>
+                        </div>
+                        <div style="display:flex; flex-direction:column;">${toolsHtml}</div>
+                    </div>
+                    
+                    <!-- À CONSTRUIRE -->
+                    <div class="col" style="background:#fffbeb;">
+                        <div class="col-header">À construire (FAD)</div>
+                        <textarea name="w${w}${s}_build" style="height:80px;" placeholder="${ph_build}"></textarea>
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    function addSessionRow(w) {
+        let c = document.getElementById(`wc-${w}`);
+        let l = String.fromCharCode(65 + c.children.length);
+        let d = document.createElement('div');
+        d.innerHTML = createSessionHTML(w, l);
+        c.appendChild(d.firstElementChild);
+        updateAllCompetencySelects();
+    }
+
+    for(let i=1; i<=15; i++) {
+        weeksContainer.innerHTML += `
+            <div class="week-wrapper">
+                <div class="week-global-header"><span class="week-label">SEMAINE ${i}</span><input type="text" name="w${i}_title" class="week-global-input" placeholder="THÈME..."></div>
+                <div id="wc-${i}">${createSessionHTML(i, 'A')}</div>
+                <button type="button" class="btn-add" onclick="addSessionRow(${i})">+ Ajouter une séquence</button>
+            </div>`;
+    }
+
+    // 6. GENERATION EVALUATIONS (AVEC BOUTONS +/- ET LIEN FAD)
+    const evalContainer = document.getElementById('evaluations-container');
+
+    function createEvalHTML(i) {
+        return `
+        <div class="eval-block">
+            <div class="eval-header">
+                <div style="display:flex; align-items:center; flex-grow:1; gap:10px;">
+                    <span class="eval-num">ÉVALUATION ${i}</span>
+                    <input type="text" name="ev${i}_title" class="eval-title-input" placeholder="Titre...">
+                    <a href="https://fadio.net/wp-content/uploads/2023/02/Recto-verso_Evaluation_en_FAD_VF-1.pdf" target="_blank" class="btn-help-fad" title="Guide: Valider la qualité d'une évaluation en FAD">
+                        <span>💡 Aide FAD</span>
+                    </a>
+                </div>
+                <div style="display:flex; align-items:center; gap:5px;">
+                    <label style="color:white; margin:0;">Date:</label>
+                    <input type="date" name="ev${i}_date" style="width:130px;">
+                </div>
+            </div>
+            
+            <div class="eval-top-bar">
+                <div><span class="eval-mini-label">Type</span>
+                    <select name="ev${i}_type" style="width:100%"><option value="">- Choisir -</option><option>Diagnostique</option><option>Formative</option><option>Sommative</option><option>Certificative</option></select>
+                </div>
+                <div><span class="eval-mini-label">Format</span>
+                    <select name="ev${i}_fmt" style="width:100%"><option value="">- Choisir -</option><option>Examen écrit</option><option>Examen pratique</option><option>Travail long</option><option>Présentation orale</option><option>Portfolio</option><option>Projet</option><option>Étude de cas</option><option>Laboratoire</option><option>Stage</option><option>Entrevue</option><option>Autre</option></select>
+                </div>
+                <div><span class="eval-mini-label">Modalité</span>
+                    <select name="ev${i}_mod" style="width:100%"><option>Individuel</option><option>Équipe</option></select>
+                </div>
+                <div><span class="eval-mini-label">Bloom</span>
+                    <select name="ev${i}_bloom" style="width:100%"><option value="">- Choisir -</option><option>Connaissances</option><option>Application</option><option>Analyse</option><option>Synthèse</option><option>Évaluation</option><option>Créativité</option></select>
+                </div>
+            </div>
+
+            <div class="eval-main-grid">
+                <div class="eval-desc-col">
+                    <div style="background:#f0f4f6; padding:10px; border:1px solid #ddd;">
+                        <label>Compétence Ciblée</label>
+                        <select name="ev${i}_comp" class="competency-select" style="width:100%"><option value="">-- Choisir --</option></select>
+                    </div>
+                    <div>
+                        <label>Description Détaillée de la Tâche</label>
+                        <textarea name="ev${i}_desc" style="width:100%; height:300px; padding:10px; background:#fcfcfc;" placeholder="Contexte, consignes..."></textarea>
+                    </div>
+                </div>
+
+                <div class="eval-side-col">
+                    <div class="eval-section-title">Logistique</div>
+                    <div style="margin-bottom:15px;">
+                        <span class="eval-mini-label">Pondération (%)</span>
+                        <div class="spinner-group">
+                            <div class="spinner-btn minus">-</div>
+                            <input type="number" name="ev${i}_pond" class="spinner-input" value="0" step="5" style="width:100% !important;">
+                            <div class="spinner-btn plus">+</div>
+                        </div>
+                    </div>
+                    <div style="margin-bottom:15px;">
+                        <span class="eval-mini-label">Durée (min)</span>
+                        <div class="spinner-group">
+                            <div class="spinner-btn minus">-</div>
+                            <input type="number" name="ev${i}_dur" class="spinner-input" value="0" step="5" style="width:100% !important;">
+                            <div class="spinner-btn plus">+</div>
+                        </div>
+                    </div>
+
+                    <div class="eval-section-title">Considérations</div>
+                    <label class="checkbox-wrapper"><input type="checkbox" name="ev${i}_c1"> Aide apprentissage</label>
+                    <label class="checkbox-wrapper"><input type="checkbox" name="ev${i}_c2"> Temps supp.</label>
+                    <label class="checkbox-wrapper"><input type="checkbox" name="ev${i}_c3"> Version adaptée</label>
+                    <label class="checkbox-wrapper"><input type="checkbox" name="ev${i}_c4"> Inclusif</label>
+
+                    <div class="eval-section-title">Intégrité & Sécurité</div>
+                    <label class="checkbox-wrapper" style="margin-bottom:4px;"><input type="checkbox" name="ev${i}_i1"> Questionnement complexe (Anti-IA)</label>
+                    <label class="checkbox-wrapper" style="margin-bottom:4px;"><input type="checkbox" name="ev${i}_i2"> Consignes claires sur l'usage de l'IA</label>
+                    <label class="checkbox-wrapper" style="margin-bottom:4px;"><input type="checkbox" name="ev${i}_i3"> Surveillance active (Caméra/Écran)</label>
+                    <label class="checkbox-wrapper" style="margin-bottom:4px;"><input type="checkbox" name="ev${i}_i4"> Protocole de citation des sources</label>
+                    <label class="checkbox-wrapper" style="margin-bottom:4px;"><input type="checkbox" name="ev${i}_i5"> Validation de l'identité</label>
+                    
+                    <div class="eval-section-title">Stratégies Anti-Plagiat</div>
+                    <div style="font-size:9px; color:#666; margin-bottom:4px; line-height:1.3; font-style:italic;">
+                        Suggestions : Temps minuté strict • Caméra ouverte • Partage écran/Word avec historique des versions • Banque de questions mélangées • Surveillance par caméra téléphone
+                    </div>
+                    <textarea name="ev${i}_plag" style="width:100%; height:60px;" placeholder="Détails des mesures..."></textarea>
+                </div>
+            </div>
+        </div>`;
+    }
+
+    function addEvaluationRow() {
+        let d = document.createElement('div');
+        d.innerHTML = createEvalHTML(evalContainer.children.length + 1);
+        evalContainer.appendChild(d);
+        updateAllCompetencySelects();
+    }
+    addEvaluationRow();
+
+    // 7. SAVE/LOAD
+    function saveData() {
+        const formData = new FormData(document.getElementById('planningForm'));
+        let obj = {};
+        formData.forEach((v,k) => {
+            if(!obj[k]) obj[k] = v;
+            else { if(!Array.isArray(obj[k])) obj[k]=[obj[k]]; obj[k].push(v); }
+        });
+        document.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(el => {
+            if(el.checked) obj[el.name + (el.type==='radio'?'_val':'')] = el.value || "on";
+        });
+        obj._struct = { weeks: {}, evals: evalContainer.children.length };
+        for(let i=1; i<=15; i++) obj._struct.weeks[i] = document.getElementById(`wc-${i}`).children.length;
+        
+        unsavedChanges = false; // Réinitialiser le drapeau de modification
+        
+        saveAs(new Blob([JSON.stringify(obj)], {type:'application/json'}), "Planification_Pharmacie.json");
+    }
+
+    function loadData(inp) {
+        let f = inp.files[0]; if(!f) return;
+        let r = new FileReader();
+        r.onload = e => {
+            let data = JSON.parse(e.target.result);
+            if(data._struct) {
+                for(let i=1; i<=15; i++) {
+                    let diff = data._struct.weeks[i] - 1;
+                    for(let k=0; k<diff; k++) addSessionRow(i);
+                }
+                while(evalContainer.children.length < data._struct.evals) addEvaluationRow();
+            }
+            if(data.courseSelect) {
+                document.getElementById('courseSelect').value = data.courseSelect;
+                updateCourseInfo();
+            }
+            setTimeout(() => {
+                for(let k in data) {
+                    if(k==='_struct') continue;
+                    let el = document.getElementsByName(k)[0];
+                    if(el) {
+                        if(el.type !== 'checkbox' && el.type !== 'radio') el.value = data[k];
+                    } else {
+                        let chk = document.querySelector(`input[name="${k.replace('_val','')}"][value="${data[k]}"]`);
+                        if(chk) chk.checked = true;
+                        let chk2 = document.querySelector(`input[name="${k}"]`);
+                        if(chk2) chk2.checked = true;
+                    }
+                }
+                unsavedChanges = false; // Réinitialiser après chargement
+            }, 100);
+        };
+        r.readAsText(f);
+    }
+
+    // 8. EXPORT WORD RIGOUREUX (The "Mirror" Method)
+    function exportToWordDocx() {
+        // Clone le DOM
+        let clone = document.querySelector('.container').cloneNode(true);
+        
+        // Nettoyage UI (Boutons, Spinners, Aide) - SAUF Consignes
+        clone.querySelectorAll('.control-bar, .btn-add, .btn-help-fad, .spinner-btn').forEach(e => e.remove());
+
+        // 1. MIRROR SELECTS (Copie la valeur sélectionnée à l'écran vers le clone)
+        let origSelects = document.querySelectorAll('select');
+        let cloneSelects = clone.querySelectorAll('select');
+        for(let i=0; i<origSelects.length; i++) {
+            let sOrig = origSelects[i];
+            let sClone = cloneSelects[i];
+            let val = sOrig.options[sOrig.selectedIndex] ? sOrig.options[sOrig.selectedIndex].text : "";
+            if(val.startsWith("--") || val.startsWith("- ")) val = "";
+            let d = document.createElement('div'); 
+            d.innerHTML = "<b>" + val + "</b>";
+            sClone.parentNode.replaceChild(d, sClone);
+        }
+
+        // 2. MIRROR INPUTS & TEXTAREAS
+        let origInputs = document.querySelectorAll('textarea, input[type="text"], input[type="number"], input[type="date"]');
+        let cloneInputs = clone.querySelectorAll('textarea, input[type="text"], input[type="number"], input[type="date"]');
+        for(let i=0; i<origInputs.length; i++) {
+            let iOrig = origInputs[i];
+            let iClone = cloneInputs[i];
+            let val = iOrig.value;
+            
+            // Suffixes automatiques
+            if(iOrig.name.endsWith('_dur') || iOrig.name.endsWith('_dur')) val += " min";
+            if(iOrig.name.endsWith('_pond')) val += " %";
+            if(iOrig.type === 'date' && val) val = "📅 " + val;
+
+            let d = document.createElement('div'); 
+            d.innerHTML = val.replace(/\n/g, '<br>');
+            
+            // Styles titres
+            if(iOrig.classList.contains('week-global-input')) { d.style.color='white'; d.style.fontWeight='bold'; d.style.fontSize='16px'; }
+            if(iOrig.classList.contains('eval-title-input')) { d.style.color='white'; d.style.fontWeight='bold'; d.style.fontSize='14px'; }
+            
+            iClone.parentNode.replaceChild(d, iClone);
+        }
+
+        // 3. MIRROR CHECKBOXES/RADIOS (Logic specifically for Mode Selector & Checkboxes)
+        let origChecks = document.querySelectorAll('.checkbox-wrapper, .mode-selector');
+        let cloneChecks = clone.querySelectorAll('.checkbox-wrapper, .mode-selector');
+        
+        for(let i=0; i<origChecks.length; i++) {
+            let wOrig = origChecks[i];
+            let wClone = cloneChecks[i];
+
+            // 3.1 GESTION SPÉCIFIQUE MODE SELECTOR (Synchrone/Asynchrone)
+            if(wOrig.classList.contains('mode-selector')) {
+                const checkedRadio = wOrig.querySelector('input:checked');
+                if (checkedRadio) {
+                    const isSync = checkedRadio.value === 'sync';
+                    const color = isSync ? '#839AD1' : '#F0AF35'; // Blue / Mustard
+                    const text = isSync ? 'SYNCHRONE' : 'ASYNCHRONE';
+                    
+                    // Create visual label for Word
+                    wClone.innerHTML = `<div style="font-weight:bold; color:${color}; border:1px solid ${color}; padding:2px; text-align:center; margin-bottom:5px;">[MODE : ${text}]</div>`;
+                } else {
+                    wClone.remove(); // Remove if nothing selected
+                }
+            } 
+            // 3.2 GESTION CHECKBOXES CLASSIQUES
+            else {
+                let inp = wOrig.querySelector('input');
+                if(inp && inp.checked) {
+                    let txt = wOrig.innerText.trim();
+                    // Retirer le texte "(Anti-IA)" etc pour le word si trop long, ou garder tel quel
+                    wClone.innerHTML = "☑ " + txt;
+                } else {
+                    wClone.remove();
+                }
+            }
+        }
+
+        // 4. CONVERSION GRILLES -> TABLEAUX
+        
+        // Semaines
+        clone.querySelectorAll('.grid-columns').forEach(g => {
+            let t = document.createElement('table'); t.className = "word-table";
+            let tr = t.insertRow();
+            Array.from(g.children).forEach(c => {
+                let td = tr.insertCell(); td.innerHTML = c.innerHTML;
+                td.style.border="1px solid #999"; td.style.verticalAlign="top";
+            });
+            g.parentNode.replaceChild(t, g);
+        });
+
+        // Evaluations
+        clone.querySelectorAll('.eval-block').forEach(blk => {
+            let t = document.createElement('table'); t.className = "word-table";
+            // Header
+            let r1 = t.insertRow();
+            let c1 = r1.insertCell(); c1.colSpan=3; 
+            c1.innerHTML = blk.querySelector('.eval-header').innerHTML; 
+            c1.style.background="#44474D"; c1.style.color="white";
+            // Top Bar
+            let r2 = t.insertRow();
+            let c2 = r2.insertCell(); c2.colSpan=3;
+            c2.innerHTML = blk.querySelector('.eval-top-bar').innerHTML;
+            // Main Content
+            let r3 = t.insertRow();
+            let cDesc = r3.insertCell(); cDesc.colSpan=2; cDesc.style.width="70%";
+            cDesc.innerHTML = blk.querySelector('.eval-desc-col').innerHTML;
+            let cSide = r3.insertCell(); cSide.style.width="30%";
+            cSide.innerHTML = blk.querySelector('.eval-side-col').innerHTML;
+
+            [c1,c2,cDesc,cSide].forEach(td => { td.style.border="1px solid #999"; td.style.padding="5px"; td.style.verticalAlign="top"; });
+            blk.innerHTML = "";
+            blk.appendChild(t);
+        });
+
+        // Info Grid
+        let ig = clone.querySelector('.info-grid');
+        if(ig) {
+            let t = document.createElement('table'); t.className = "word-table";
+            let tr = t.insertRow();
+            let c1 = tr.insertCell(); c1.style.width="40%"; c1.innerHTML = ig.querySelector('.info-col-left').innerHTML;
+            let c2 = tr.insertCell(); c2.style.width="60%"; c2.innerHTML = ig.querySelector('.info-col-right').innerHTML;
+            ig.parentNode.replaceChild(t, ig);
+        }
+
+        let css = `
+            <style>
+                body { font-family: Arial, sans-serif; font-size:11px; }
+                .word-table { width:100%; border-collapse:collapse; margin-bottom:10px; }
+                .word-table td { border:1px solid #999; padding:5px; }
+                .week-global-header { background:#3D5E6B; color:white; padding:5px; font-weight:bold; }
+                .col-header, .eval-section-title, label, .eval-mini-label { font-weight:bold; text-transform:uppercase; color:#444; }
+                .session-badge { background:#9CA5B1; color:white; padding:2px 5px; }
+                .eval-num { font-weight: bold; font-size: 14px; margin-right:10px; }
+            </style>`;
+
+        let html = `<!DOCTYPE html><html><head><meta charset="UTF-8">${css}</head><body>${clone.innerHTML}</body></html>`;
+        saveAs(htmlDocx.asBlob(html, {orientation:'landscape', margins:{top:720, bottom:720, left:720, right:720}}), "Planification_Pharmacie_Finale.docx");
+    }
+</script>
+
+</body>
+</html>                                                                                                     
